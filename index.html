@@ -4,16 +4,70 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pagination</title>
+    <link rel="stylesheet" href="./css/main.css" />
     <script defer src="./js/script.js"></script>
+    <title>Pagination</title>
   </head>
   <body>
     <div class="container">
-      <div>
-        <div></div>
-        <div></div>
+      <h1 class="header">In stock</h1>
+      <div class="products grid grid--4-cols">
+        <!-- <div class="product">
+          <img src="./1.jpg" alt="" srcset="" />
+          <div>
+            <h2>Infinix INBOOK</h2>
+            <h3>Price: 586 $</h3>
+            <h3>Brand: Samsung</h3>
+            <h3>Rating: 5.21</h3>
+            <h3>Stock: 81</h3>
+            <p>
+              Samsung's new variant which goes beyond Galaxy to the Universe
+            </p>
+          </div>
+        </div> -->
       </div>
-      <div></div>
+      <!-- pagination btn -->
+      <div class="pagination-container">
+        <div class="btn-container">
+          <button class="btn btn--left">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="btn-icon"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 19.5L8.25 12l7.5-7.5"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="a-container">
+          <!-- <a href="#" class="page--current" target="_blank">3</a> -->
+        </div>
+        <div class="btn-container">
+          <button class="btn btn--right">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="btn-icon"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8.25 4.5l7.5 7.5-7.5 7.5"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   </body>
 </html>
