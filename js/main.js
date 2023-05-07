@@ -10,7 +10,7 @@ let paginationParameters = {
   pageArr: [],
 };
 
-const pageNumbers = (total = 100, max = 10, current = 1) => {
+const pageNumbers = (total, max, current) => {
   const half = Math.round(max / 2);
   let pagBTNs = Math.ceil(total / max);
   let to = max;
@@ -30,6 +30,7 @@ const pageNumbers = (total = 100, max = 10, current = 1) => {
   }
 
   if (pagBTNs < max) max = pagBTNs;
+  paginationParameters.pages = pagBTNs;
 
   paginationParameters.pageArr = Array.from(
     { length: max },
@@ -39,84 +40,149 @@ const pageNumbers = (total = 100, max = 10, current = 1) => {
   return paginationParameters.pageArr;
 };
 
-pageNumbers(
-  paginationParameters.total,
-  paginationParameters.limit,
-  paginationParameters.currentPage
-);
+function PaginationButtons(totalPages, maxPageVisible = 10, currentPage = 1) {
+  let pages = pageNumbers(totalPages, maxPageVisible, currentPage);
+  let currentPageBtn = null;
 
-const pagBtns = function () {
-  const arr = paginationParameters.pageArr;
-  arr.forEach((element, i) => {
-    const htmlBtn = `<span class="a-pags ${
-      paginationParameters.currentPage === element ? "page--current" : ""
-    }" data-page="${element}">${element}</span>`;
-    console.log(htmlBtn);
-    pagBtnContainer.insertAdjacentHTML("beforeend", htmlBtn);
-  });
+  const buttons = new Map();
+  const fragment = document.createDocumentFragment();
 
-  const aPaginations = document.querySelectorAll(".a-pags");
+  const paginationButtonsContainer = document.createElement("div");
+  paginationButtonsContainer.className = "pagination-buttons";
+  const disabled = {
+    start: () => pages[0] === currentPage,
+    prev: () => currentPage === 1,
+    end: () => currentPage === totalPages / maxPageVisible,
+    next: () => currentPage === totalPages / maxPageVisible,
+  };
 
-  aPaginations.forEach((pagination) => {
-    pagination.addEventListener("click", (e) => {
-      e.preventDefault();
-      console.log(e);
-      paginationParameters.currentPage = parseInt(pagination.dataset.page);
+  const createAndSetupButton = (
+    label = "",
+    cls = "",
+    disabled = false,
+    handlerClick = () => {}
+  ) => {
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.className = `page-btn ${cls}`;
+    button.disabled = disabled;
+    button.addEventListener("click", (e) => {
+      handlerClick(e);
+      this.update();
 
-      console.log(paginationParameters.currentPage);
-
-      productsCont.innerHTML = "";
-      getProducts(
-        paginationParameters.limit,
-        (paginationParameters.currentPage - 1) * paginationParameters.limit
-      );
-      updatePagination();
+      paginationButtonsContainer.value = currentPage;
+      paginationButtonsContainer.dispatchEvent(new Event("change"));
     });
+
+    return button;
+  };
+
+  const onPageButtonClick = (e) =>
+    (currentPage = Number(e.currentTarget.textContent));
+
+  const onPageButtonUpdate = (index) => (btn) => {
+    btn.textContent = pages[index];
+
+    if (pages[index] === currentPage) {
+      currentPageBtn.classList.remove("active");
+      btn.classList.add("active");
+      currentPageBtn = btn;
+      currentPageBtn.focus();
+    }
+  };
+
+  buttons.set(
+    createAndSetupButton(
+      "start",
+      "start-page",
+      disabled.start(),
+      () => (currentPage = 1)
+    ),
+    (btn) => (btn.disabled = disabled.start())
+  );
+
+  buttons.set(
+    createAndSetupButton(
+      "prev",
+      "prev-page",
+      disabled.prev(),
+      () => (currentPage -= 1)
+    ),
+    (btn) => (btn.disabled = disabled.prev())
+  );
+
+  pages.forEach((pageNumber, index) => {
+    const isCurrentPage = pageNumber === currentPage;
+
+    const button = createAndSetupButton(
+      pageNumber,
+      isCurrentPage ? "active" : "",
+      false,
+      onPageButtonClick
+    );
+
+    if (isCurrentPage) {
+      currentPageBtn = button;
+    }
+    buttons.set(button, onPageButtonUpdate(index));
   });
-};
 
-const updatePaginationButtons = function () {
-  const aPaginations = document.querySelectorAll(".a-pags");
-  const arr = paginationParameters.pageArr;
+  buttons.set(
+    createAndSetupButton(
+      "next",
+      "next-page",
+      disabled.next(),
+      () => (currentPage += 1)
+    ),
+    (btn) => (btn.disabled = disabled.next())
+  );
 
-  aPaginations.forEach((element, i) => {
-    console.log(element);
-    const current = paginationParameters.currentPage;
-    const htmlBtn = `<span class="a-pags ${
-      current === +element.dataset.page ? "page--current" : ""
-    }"  data-page="${arr[i]}">${arr[i]}</span>`;
+  buttons.set(
+    createAndSetupButton(
+      "end",
+      "end-page",
+      disabled.end(),
+      () => (currentPage = totalPages / maxPageVisible)
+    ),
+    (btn) => (btn.disabled = disabled.end())
+  );
 
-    element.outerHTML = htmlBtn;
+  buttons.forEach((_, btn) => {
+    fragment.appendChild(btn);
   });
 
-  const newPaginations = document.querySelectorAll(".a-pags");
+  this.render = (
+    container = document.querySelector(".pagination-container")
+  ) => {
+    paginationButtonsContainer.appendChild(fragment);
+    container.appendChild(paginationButtonsContainer);
+  };
 
-  newPaginations.forEach((pagination) => {
-    pagination.addEventListener("click", (e) => {
-      e.preventDefault();
-      productsCont.innerHTML = "";
-      getProducts(
-        paginationParameters.limit,
-        (paginationParameters.currentPage - 1) * paginationParameters.limit
-      );
-      updatePagination();
-    });
-  });
-};
+  this.update = (newPageNumber = currentPage) => {
+    currentPage = newPageNumber;
+    pages = pageNumbers(totalPages, maxPageVisible, currentPage);
+    buttons.forEach((updateButton, button) => updateButton(button));
+  };
 
-const updatePagination = function () {
-  updatePaginationButtons();
-};
+  this.onChange = (handler) => {
+    paginationButtonsContainer.addEventListener("change", handler);
+  };
+}
 
-pagBtns();
+const paginationButtons = new PaginationButtons(paginationParameters.total);
+paginationButtons.render();
+////////////////////////
 const getProducts = async function (lim, skp) {
   try {
+    productsCont.innerHTML =
+      '<div class="spinner-cont"><div class="spinner"></div></div>';
     const API_URL = `https://dummyjson.com/products?limit=${lim}&skip=${skp}`;
 
     const res = await fetch(API_URL);
     const result = await res.json();
 
-    paginationParameters.total = result.total;
+    paginationParameters.total = 150;
+    if (result) productsCont.innerHTML = "";
     const productsArr = result.products;
     productsArr.forEach((el, i) => {
       let html = `
@@ -137,6 +203,11 @@ const getProducts = async function (lim, skp) {
     console.log(error);
   }
 };
+getProducts(10, 0);
 
-paginationParameters.currentPage = 1;
-getProducts(paginationParameters.limit, 0);
+paginationButtons.onChange((e) => {
+  const currentPage = e.target.value;
+  const limit = (currentPage - 1) * 10;
+
+  getProducts(10, limit);
+});
